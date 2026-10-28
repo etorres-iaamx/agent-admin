@@ -1,0 +1,5 @@
+{
+  "name": "openclaw-agent-admin",
+  "version": "1.0.0",
+  "description": "Administer persistent OpenClaw agents through the official CLI."
+}
