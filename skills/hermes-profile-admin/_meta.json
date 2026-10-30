@@ -1,0 +1,5 @@
+{
+  "name": "hermes-profile-admin",
+  "version": "0.1.0",
+  "description": "Administer Hermes Profiles and their context files."
+}

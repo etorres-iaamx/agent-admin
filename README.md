@@ -1,17 +1,24 @@
-# OpenClaw Agent Admin
+# OpenClaw Agent Admin y Hermes Profile Admin
 
-Adaptador Python y skill para administrar agentes persistentes de OpenClaw
-mediante la CLI oficial `openclaw agents`.
+Este repositorio contiene administradores Python y skills separadas para
+OpenClaw y Hermes. Cada skill administra una plataforma diferente y debe
+invocarse únicamente para el sistema que le corresponde.
 
-## Incluye
+## Componentes
 
-- Alta: `create`
-- Consulta: `list` y `get`
-- Cambios de identidad y bindings: `update`
-- Baja física confirmada: `delete --confirm`
-- Salida JSON, `--dry-run` y pruebas sin dependencias externas
+```text
+skills/openclaw-agent-admin/SKILL.md
+skills/openclaw-agent-admin/scripts/manager.py
+skills/openclaw-agent-admin/tests/test_manager.py
 
-## Uso rápido
+skills/hermes-profile-admin/SKILL.md
+tools/hermes_profiles/manager.py
+tests/test_hermes_profiles.py
+```
+
+## OpenClaw
+
+El administrador de OpenClaw delega el ciclo de vida en la CLI oficial:
 
 ```bash
 python3 skills/openclaw-agent-admin/scripts/manager.py list
@@ -23,11 +30,45 @@ python3 skills/openclaw-agent-admin/scripts/manager.py update cliente-001 --emoj
 python3 skills/openclaw-agent-admin/scripts/manager.py delete cliente-001 --confirm
 ```
 
-El adaptador no modifica directamente `openclaw.json`, SQLite, workspaces ni
-credenciales; delega esas operaciones en la CLI instalada de OpenClaw.
+No modifica directamente `openclaw.json`, SQLite, workspaces ni credenciales.
+
+## Hermes
+
+El administrador de Hermes delega el ciclo de vida en `hermes profile` y
+administra únicamente los archivos de contexto del Profile indicado:
+
+```bash
+python3 tools/hermes_profiles/manager.py list
+python3 tools/hermes_profiles/manager.py show cliente-001
+python3 tools/hermes_profiles/manager.py create cliente-001 \
+  --description "Atencion Comercial"
+python3 tools/hermes_profiles/manager.py validate cliente-001
+python3 tools/hermes_profiles/manager.py context-update cliente-001 \
+  --soul-file ./SOUL.md \
+  --user-file ./USER.md \
+  --agents-file ./AGENTS.md
+python3 tools/hermes_profiles/manager.py delete cliente-001 --confirm
+```
+
+El administrador de Hermes:
+
+- No clona `default` ni otro Profile.
+- Protege `default` contra eliminación.
+- Restringe las escrituras a `~/.hermes/profiles/<name>/` o `HERMES_HOME`.
+- Administra `SOUL.md`, `memories/USER.md` y `AGENTS.md` mediante archivos
+  explícitos.
+- Incluye `--dry-run` para revisar mutaciones.
+- No modifica bases de datos, sesiones, canales ni credenciales.
+
+El Gateway de Hermes sigue siendo compartido por los Profiles; este script no
+inicia un Gateway independiente por cliente.
 
 ## Pruebas
 
 ```bash
+python3 -m unittest discover -s tests -p 'test_hermes_profiles.py' -v
 python3 -m unittest discover -s skills/openclaw-agent-admin/tests -v
 ```
+
+No se versionan tokens, contraseñas, API keys, archivos `.env` ni estados
+locales.
