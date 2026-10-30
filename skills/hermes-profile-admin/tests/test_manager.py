@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parents[1]
-SCRIPT = ROOT / "tools" / "hermes_profiles" / "manager.py"
+SCRIPT = ROOT / "scripts" / "manager.py"
 
 
 class HermesProfileManagerTests(unittest.TestCase):
