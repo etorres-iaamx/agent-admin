@@ -14,7 +14,7 @@ directories, or workspaces directly.
 ## Operations
 
 ```bash
-python scripts/manager.py list
+python scripts/manager.py list [--bindings] [--tree]
 python scripts/manager.py get <agent-id>
 python scripts/manager.py create <agent-id> --workspace <path> --agent-dir <path> [--model <id>] [--bind <channel[:account]>]
 python scripts/manager.py update <agent-id> [--name <name>] [--theme <theme>] [--emoji <emoji>] [--avatar <value>] [--bind <channel[:account]>] [--unbind <channel[:account]>]
@@ -25,10 +25,14 @@ Use `--dry-run` before a mutation when the requested values or target are
 ambiguous. Use `--json` for machine-readable output (the adapter emits JSON by
 default). Treat a non-zero exit code as failure and inspect the returned error.
 
-`delete --confirm` is a physical deletion: the OpenClaw CLI prunes the agent's
-workspace/state. Do not infer that it is a reversible or logical deactivation.
-Do not use it for the `main` agent unless the user explicitly requests that
-exact target.
+`delete --confirm` removes the agent from the OpenClaw configuration and may
+move its workspace/state to the configured trash or cleanup location. Do not
+infer that it is a reversible or logical deactivation. Do not use it for the
+agent identified by `agents.defaults.systemAgent.agentId` unless the user
+explicitly requests that exact target.
+
+The `--tree` list option depends on the installed OpenClaw version. Verify it
+with `openclaw agents list --help` before using it in automation.
 
 The adapter can be pointed at a test or alternate executable with
 `--openclaw-bin PATH` or `OPENCLAW_BIN`. Never put tokens, passwords, or API
