@@ -25,10 +25,14 @@ python3 skills/openclaw-agent-admin/scripts/manager.py list
 python3 skills/openclaw-agent-admin/scripts/manager.py create cliente-001 \
   --workspace ~/.openclaw/workspaces/cliente-001 \
   --agent-dir ~/.openclaw/agents/cliente-001/agent \
-  --model openai/gpt-5.6-luna
+  --model <provider/model-configurado>
 python3 skills/openclaw-agent-admin/scripts/manager.py update cliente-001 --emoji "🧠"
 python3 skills/openclaw-agent-admin/scripts/manager.py delete cliente-001 --confirm
 ```
+
+Reemplaza `<provider/model-configurado>` por un modelo disponible en el
+entorno de OpenClaw. Las opciones `--bindings` y `--tree` de `list` dependen
+de la versión instalada; compruébalas con `openclaw agents list --help`.
 
 No modifica directamente `openclaw.json`, SQLite, workspaces ni credenciales.
 
