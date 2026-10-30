@@ -12,8 +12,8 @@ skills/openclaw-agent-admin/scripts/manager.py
 skills/openclaw-agent-admin/tests/test_manager.py
 
 skills/hermes-profile-admin/SKILL.md
-tools/hermes_profiles/manager.py
-tests/test_hermes_profiles.py
+skills/hermes-profile-admin/scripts/manager.py
+skills/hermes-profile-admin/tests/test_manager.py
 ```
 
 ## OpenClaw
@@ -42,16 +42,16 @@ El administrador de Hermes delega el ciclo de vida en `hermes profile` y
 administra únicamente los archivos de contexto del Profile indicado:
 
 ```bash
-python3 tools/hermes_profiles/manager.py list
-python3 tools/hermes_profiles/manager.py show cliente-001
-python3 tools/hermes_profiles/manager.py create cliente-001 \
+python3 skills/hermes-profile-admin/scripts/manager.py list
+python3 skills/hermes-profile-admin/scripts/manager.py show cliente-001
+python3 skills/hermes-profile-admin/scripts/manager.py create cliente-001 \
   --description "Atencion Comercial"
-python3 tools/hermes_profiles/manager.py validate cliente-001
-python3 tools/hermes_profiles/manager.py context-update cliente-001 \
+python3 skills/hermes-profile-admin/scripts/manager.py validate cliente-001
+python3 skills/hermes-profile-admin/scripts/manager.py context-update cliente-001 \
   --soul-file ./SOUL.md \
   --user-file ./USER.md \
   --agents-file ./AGENTS.md
-python3 tools/hermes_profiles/manager.py delete cliente-001 --confirm
+python3 skills/hermes-profile-admin/scripts/manager.py delete cliente-001 --confirm
 ```
 
 El administrador de Hermes:
@@ -70,7 +70,7 @@ inicia un Gateway independiente por cliente.
 ## Pruebas
 
 ```bash
-python3 -m unittest discover -s tests -p 'test_hermes_profiles.py' -v
+python3 -m unittest discover -s skills/hermes-profile-admin/tests -v
 python3 -m unittest discover -s skills/openclaw-agent-admin/tests -v
 ```
 

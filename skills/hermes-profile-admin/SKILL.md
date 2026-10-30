@@ -13,7 +13,7 @@ metadata:
 
 # Hermes Profile administration
 
-Use `tools/hermes_profiles/manager.py` to administer real Hermes Profiles and
+Use `skills/hermes-profile-admin/scripts/manager.py` to administer real Hermes Profiles and
 their context files. The adapter delegates lifecycle changes to the official
 `hermes profile` CLI and writes only the named Profile's `SOUL.md`,
 `memories/USER.md`, and `AGENTS.md` files.
@@ -41,15 +41,15 @@ CLI with `--hermes-bin` and the root with `--hermes-home` when testing.
 ## Quick Reference
 
 ```bash
-python3 tools/hermes_profiles/manager.py list
-python3 tools/hermes_profiles/manager.py show cliente-001
-python3 tools/hermes_profiles/manager.py create cliente-001 --description "Atencion Comercial"
-python3 tools/hermes_profiles/manager.py validate cliente-001
-python3 tools/hermes_profiles/manager.py context-update cliente-001 \
+python3 skills/hermes-profile-admin/scripts/manager.py list
+python3 skills/hermes-profile-admin/scripts/manager.py show cliente-001
+python3 skills/hermes-profile-admin/scripts/manager.py create cliente-001 --description "Atencion Comercial"
+python3 skills/hermes-profile-admin/scripts/manager.py validate cliente-001
+python3 skills/hermes-profile-admin/scripts/manager.py context-update cliente-001 \
   --soul-file ./SOUL.md \
   --user-file ./USER.md \
   --agents-file ./AGENTS.md
-python3 tools/hermes_profiles/manager.py delete cliente-001 --confirm
+python3 skills/hermes-profile-admin/scripts/manager.py delete cliente-001 --confirm
 ```
 
 Use `--dry-run` before mutations when reviewing the target or command. The
