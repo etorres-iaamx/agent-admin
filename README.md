@@ -46,6 +46,11 @@ python3 skills/hermes-profile-admin/scripts/manager.py list
 python3 skills/hermes-profile-admin/scripts/manager.py show cliente-001
 python3 skills/hermes-profile-admin/scripts/manager.py create cliente-001 \
   --description "Atencion Comercial"
+python3 skills/hermes-profile-admin/scripts/manager.py update cliente-001 \
+  --description "Atencion Comercial y soporte" \
+  --alias soporte
+python3 skills/hermes-profile-admin/scripts/manager.py update cliente-001 \
+  --rename cliente-soporte
 python3 skills/hermes-profile-admin/scripts/manager.py validate cliente-001
 python3 skills/hermes-profile-admin/scripts/manager.py context-update cliente-001 \
   --soul-file ./SOUL.md \
@@ -61,6 +66,8 @@ El administrador de Hermes:
 - Restringe las escrituras a `~/.hermes/profiles/<name>/` o `HERMES_HOME`.
 - Administra `SOUL.md`, `memories/USER.md` y `AGENTS.md` mediante archivos
   explícitos.
+- Permite cambiar la descripción, renombrar el Profile y administrar su alias
+  mediante `update`.
 - Incluye `--dry-run` para revisar mutaciones.
 - No modifica bases de datos, sesiones, canales ni credenciales.
 

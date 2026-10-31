@@ -44,6 +44,11 @@ CLI with `--hermes-bin` and the root with `--hermes-home` when testing.
 python3 skills/hermes-profile-admin/scripts/manager.py list
 python3 skills/hermes-profile-admin/scripts/manager.py show cliente-001
 python3 skills/hermes-profile-admin/scripts/manager.py create cliente-001 --description "Atencion Comercial"
+python3 skills/hermes-profile-admin/scripts/manager.py update cliente-001 \
+  --description "Atencion Comercial y soporte" \
+  --alias soporte
+python3 skills/hermes-profile-admin/scripts/manager.py update cliente-001 \
+  --rename cliente-soporte
 python3 skills/hermes-profile-admin/scripts/manager.py validate cliente-001
 python3 skills/hermes-profile-admin/scripts/manager.py context-update cliente-001 \
   --soul-file ./SOUL.md \
@@ -63,11 +68,14 @@ adapter returns JSON with `ok` and `result` or `error`.
    current state is recorded.
 3. Use `create` without cloning another Profile. Completion criterion: the
    official CLI reports successful creation.
-4. Use `context-update` with explicit source files. Completion criterion: every
+4. Use `update` for Profile configuration such as description, rename, or
+   wrapper alias. Completion criterion: each requested official CLI operation
+   reports success.
+5. Use `context-update` with explicit source files. Completion criterion: every
    requested file exists only under the target Profile directory.
-5. Run `validate`. Completion criterion: `valid` is `true` and all three files
+6. Run `validate`. Completion criterion: `valid` is `true` and all three files
    are present when the Profile is intended to be complete.
-6. For deletion, require `--confirm` and never target `default`. Completion
+7. For deletion, require `--confirm` and never target `default`. Completion
    criterion: Hermes reports successful deletion and a subsequent `list` no
    longer shows the named Profile.
 
@@ -77,6 +85,9 @@ adapter returns JSON with `ok` and `result` or `error`.
 - `memories/USER.md` defines the client and fictitious contact context.
 - `AGENTS.md` defines operational limits and rejected cross-client requests.
 - The adapter never copies a source Profile's files automatically.
+- `update --description` delegates to `hermes profile describe --text`.
+- `update --rename` delegates to `hermes profile rename`.
+- `update --alias` and `--remove-alias` delegate to `hermes profile alias`.
 - `context-update` uses atomic per-file replacement only at the resolved target
   paths; it does not edit Hermes databases or provider credentials.
 

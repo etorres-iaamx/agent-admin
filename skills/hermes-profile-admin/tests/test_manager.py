@@ -87,6 +87,37 @@ print('ok: ' + ' '.join(sys.argv[1:]))
         self.assertFalse(payload["result"]["valid"])
         self.assertIn("SOUL.md", payload["result"]["missing"])
 
+    def test_update_delegates_description_rename_and_alias(self):
+        result = self.run_manager(
+            "update", "cliente-001",
+            "--description", "Atencion y soporte",
+            "--rename", "cliente-soporte",
+            "--alias", "soporte",
+            "--hermes-bin", str(self.fake_bin),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        commands = [entry["command"][1:] for entry in payload["result"]]
+        self.assertIn(["profile", "describe", "cliente-001", "--text", "Atencion y soporte"], commands)
+        self.assertIn(["profile", "rename", "cliente-001", "cliente-soporte"], commands)
+        self.assertIn(["profile", "alias", "cliente-soporte", "--name", "soporte"], commands)
+
+    def test_update_requires_a_change(self):
+        result = self.run_manager(
+            "update", "cliente-001", "--hermes-bin", str(self.fake_bin)
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("requires", result.stderr)
+
+    def test_update_dry_run_does_not_execute_hermes(self):
+        result = self.run_manager(
+            "update", "cliente-001", "--description", "Demo", "--dry-run",
+            "--hermes-bin", str(Path(self.tmp.name) / "missing-hermes"),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertTrue(all(item["dry_run"] for item in payload["result"]))
+
     def test_dry_run_does_not_write_or_execute(self):
         result = self.run_manager(
             "context-update", "cliente-003", "--dry-run", "--soul-file", str(Path(self.tmp.name) / "missing")

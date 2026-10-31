@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -69,6 +70,23 @@ def context_paths(home: Path, name: str) -> dict[str, Path]:
     return {key: root / relative for key, relative in CONTEXT_FILES.items()}
 
 
+def atomic_write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=path.parent, prefix=f".{path.name}.", delete=False
+        ) as stream:
+            temporary = Path(stream.name)
+            stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary and temporary.exists():
+            temporary.unlink()
+
+
 def update_context(args: argparse.Namespace) -> dict[str, Any]:
     home = hermes_home(args.hermes_home)
     paths = context_paths(home, args.profile)
@@ -88,8 +106,7 @@ def update_context(args: argparse.Namespace) -> dict[str, Any]:
             raise ManagerError(f"context source not found: {source}")
         content[key] = source.read_text(encoding="utf-8")
     for key, text in content.items():
-        paths[key].parent.mkdir(parents=True, exist_ok=True)
-        paths[key].write_text(text, encoding="utf-8")
+        atomic_write(paths[key], text)
     return {
         "status": "updated",
         "profile": args.profile,
@@ -132,6 +149,16 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--hermes-bin", default=os.environ.get("HERMES_BIN", "hermes"))
     create.add_argument("--dry-run", action="store_true")
 
+    update = sub.add_parser("update", help="update Profile configuration")
+    update.add_argument("profile")
+    update.add_argument("--description", help="replace the Profile description")
+    update.add_argument("--rename", help="rename the Profile")
+    alias = update.add_mutually_exclusive_group()
+    alias.add_argument("--alias", help="create or replace the Profile wrapper alias")
+    alias.add_argument("--remove-alias", action="store_true", help="remove the Profile wrapper alias")
+    update.add_argument("--hermes-bin", default=os.environ.get("HERMES_BIN", "hermes"))
+    update.add_argument("--dry-run", action="store_true")
+
     delete = sub.add_parser("delete", help="physically delete a Profile")
     delete.add_argument("profile")
     delete.add_argument("--confirm", action="store_true")
@@ -150,7 +177,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def execute(args: argparse.Namespace) -> dict[str, Any]:
+def execute(args: argparse.Namespace) -> Any:
     if args.command == "list":
         return run_hermes(args.hermes_bin, ["profile", "list"], args.dry_run)
     if args.command == "show":
@@ -162,6 +189,40 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         if args.description:
             command.extend(["--description", args.description])
         return run_hermes(args.hermes_bin, command, args.dry_run)
+    if args.command == "update":
+        validate_profile_name(args.profile)
+        if args.rename:
+            validate_profile_name(args.rename)
+        if not any((args.description is not None, args.rename, args.alias, args.remove_alias)):
+            raise ManagerError("update requires --description, --rename, --alias, or --remove-alias")
+        results = []
+        target = args.profile
+        if args.description is not None:
+            results.append(run_hermes(
+                args.hermes_bin,
+                ["profile", "describe", target, "--text", args.description],
+                args.dry_run,
+            ))
+        if args.rename:
+            results.append(run_hermes(
+                args.hermes_bin,
+                ["profile", "rename", target, args.rename],
+                args.dry_run,
+            ))
+            target = args.rename
+        if args.alias:
+            results.append(run_hermes(
+                args.hermes_bin,
+                ["profile", "alias", target, "--name", args.alias],
+                args.dry_run,
+            ))
+        elif args.remove_alias:
+            results.append(run_hermes(
+                args.hermes_bin,
+                ["profile", "alias", target, "--remove"],
+                args.dry_run,
+            ))
+        return results
     if args.command == "delete":
         validate_profile_name(args.profile)
         if args.profile == "default":
