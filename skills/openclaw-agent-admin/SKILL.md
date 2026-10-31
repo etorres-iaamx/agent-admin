@@ -1,6 +1,7 @@
 ---
 name: openclaw-agent-admin
 description: Administer persistent OpenClaw agents through the official CLI, including create, inspect, identity updates, bindings, and confirmed deletion. Use for roster lifecycle automation; do not use for editing agent workspace content or provider credentials.
+version: 1.0.0
 metadata:
   short-description: Manage OpenClaw agent lifecycle
 ---
