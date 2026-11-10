@@ -8,9 +8,10 @@ metadata:
 
 # OpenClaw agent administration
 
-Use `scripts/manager.py` as the stable adapter for lifecycle operations. It
-delegates to `openclaw agents`; it does not edit `openclaw.json`, SQLite, agent
-directories, or workspaces directly.
+Use `scripts/manager.py` as the stable CLI adapter for lifecycle operations.
+It delegates to the shared `openclaw-agent-core` package and ultimately to
+`openclaw agents`; it does not edit `openclaw.json`, SQLite, agent directories,
+or workspaces directly.
 
 ## Operations
 

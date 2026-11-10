@@ -11,23 +11,42 @@ import argparse
 import json
 import os
 import shlex
-import subprocess
 import sys
+from pathlib import Path
 from typing import Any, Sequence
+
+try:
+    from openclaw_agent_core import OpenClawClient, OpenClawCommandError
+except ModuleNotFoundError:
+    # Keep the documented direct-script invocation working from a checkout.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from openclaw_agent_core import OpenClawClient, OpenClawCommandError
 
 
 class ManagerError(RuntimeError):
     """An expected adapter or OpenClaw CLI failure."""
 
 
-def run_openclaw(binary: str, args: Sequence[str], dry_run: bool = False) -> dict[str, Any]:
+def run_openclaw(
+    binary: str,
+    args: Sequence[str],
+    dry_run: bool = False,
+    timeout_seconds: float = 30.0,
+) -> dict[str, Any]:
     command = [binary, "agents", *args]
     result: dict[str, Any] = {"command": shlex.join(command), "dry_run": dry_run}
     if dry_run:
         result["status"] = "planned"
         return result
 
-    completed = subprocess.run(command, capture_output=True, text=True, check=False)
+    client = OpenClawClient(binary, timeout_seconds=timeout_seconds)
+    try:
+        completed = client.run(["agents", *args])
+    except OpenClawCommandError as exc:
+        detail = exc.stderr.strip() or exc.stdout.strip() or exc.code
+        suffix = f" (exit {exc.returncode})" if exc.returncode is not None else ""
+        raise ManagerError(f"{detail}{suffix}") from exc
+
     result["returncode"] = completed.returncode
     if completed.stdout.strip():
         result["stdout"] = completed.stdout.strip()
@@ -37,9 +56,6 @@ def run_openclaw(binary: str, args: Sequence[str], dry_run: bool = False) -> dic
             pass
     if completed.stderr.strip():
         result["stderr"] = completed.stderr.strip()
-    if completed.returncode:
-        detail = completed.stderr.strip() or completed.stdout.strip() or "OpenClaw CLI failed"
-        raise ManagerError(f"{detail} (exit {completed.returncode})")
     result["status"] = "ok"
     return result
 

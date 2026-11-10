@@ -16,6 +16,13 @@ skills/hermes-profile-admin/scripts/manager.py
 skills/hermes-profile-admin/tests/test_manager.py
 ```
 
+El administrador de OpenClaw incluye alta (`create`), consulta (`list` y
+`get`), cambios (`update`), baja confirmada (`delete --confirm`), salida JSON
+y `--dry-run`. También publica el paquete compartido `openclaw-agent-core`,
+que encapsula la ejecución de la CLI oficial con `argv`, `shell=False`,
+timeout y errores tipados. Aplicaciones como `webapp4` pueden fijarlo a un
+commit de este repositorio sin copiar el código del adaptador.
+
 ## OpenClaw
 
 El administrador de OpenClaw delega el ciclo de vida en la CLI oficial:
@@ -79,6 +86,7 @@ inicia un Gateway independiente por cliente.
 ```bash
 python3 -m unittest discover -s skills/hermes-profile-admin/tests -v
 python3 -m unittest discover -s skills/openclaw-agent-admin/tests -v
+uv build
 ```
 
 No se versionan tokens, contraseñas, API keys, archivos `.env` ni estados
