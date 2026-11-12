@@ -39,6 +39,17 @@ class ManagerTests(unittest.TestCase):
         self.assertIn("--non-interactive", command)
         self.assertIn("telegram:demo", command)
 
+    def test_bind_peer_dry_run_does_not_need_openclaw(self):
+        result = run(
+            "bind-peer", "agent-a", "--channel", "telegram", "--peer-id", "12345",
+            "--dry-run", "--openclaw-bin", "does-not-exist",
+        )
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["results"][0]["status"], "planned")
+        self.assertEqual(payload["results"][0]["match"]["peer"]["id"], "12345")
+
 
 if __name__ == "__main__":
     unittest.main()

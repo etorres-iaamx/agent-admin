@@ -20,6 +20,7 @@ python scripts/manager.py list [--bindings] [--tree]
 python scripts/manager.py get <agent-id>
 python scripts/manager.py create <agent-id> --workspace <path> --agent-dir <path> [--model <id>] [--bind <channel[:account]>]
 python scripts/manager.py update <agent-id> [--name <name>] [--theme <theme>] [--emoji <emoji>] [--avatar <value>] [--bind <channel[:account]>] [--unbind <channel[:account]>]
+python scripts/manager.py bind-peer <agent-id> --channel <telegram|whatsapp> --account <id> --peer-id <external-id>
 python scripts/manager.py delete <agent-id> --confirm
 ```
 
@@ -39,6 +40,11 @@ with `openclaw agents list --help` before using it in automation.
 The adapter can be pointed at a test or alternate executable with
 `--openclaw-bin PATH` or `OPENCLAW_BIN`. Never put tokens, passwords, or API
 keys in command arguments, skill files, logs, or generated profiles.
+
+`bind-peer` is the identity-safe operation for shared Telegram and WhatsApp
+accounts. It checks conflicting routes, applies the route through the
+OpenClaw config CLI, and performs a readback. Do not replace it with a broad
+channel binding when multiple identities share one account.
 
 Creating an agent only creates its OpenClaw lifecycle entry. If the agent needs
 `AGENTS.md`, `SOUL.md`, `USER.md`, or `IDENTITY.md`, create those separately in

@@ -8,6 +8,7 @@ of modifying OpenClaw's configuration or databases itself.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 import shlex
@@ -60,6 +61,15 @@ def run_openclaw(
     return result
 
 
+def run_config_json(binary: str, args: Sequence[str], *, stdin: str | None = None) -> Any:
+    client = OpenClawClient(binary, timeout_seconds=30.0)
+    try:
+        return client.run_json(["config", *args], stdin=stdin)
+    except OpenClawCommandError as exc:
+        detail = exc.stderr.strip() or exc.stdout.strip() or exc.code
+        raise ManagerError(detail) from exc
+
+
 def add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--openclaw-bin", default=os.environ.get("OPENCLAW_BIN", "openclaw"), help=argparse.SUPPRESS)
     parser.add_argument("--dry-run", action="store_true", help="Show the command without executing it")
@@ -102,6 +112,13 @@ def build_parser() -> argparse.ArgumentParser:
     add_common(command)
     command.add_argument("agent_id")
     command.add_argument("--confirm", action="store_true", help="Required confirmation for physical deletion")
+
+    command = sub.add_parser("bind-peer", help="Bind one external direct peer to an agent")
+    add_common(command)
+    command.add_argument("agent_id")
+    command.add_argument("--channel", required=True, choices=("telegram", "whatsapp"))
+    command.add_argument("--account", default="default")
+    command.add_argument("--peer-id", required=True)
     return parser
 
 
@@ -161,6 +178,42 @@ def execute(args: argparse.Namespace) -> list[dict[str, Any]]:
         if not args.confirm:
             raise ManagerError("delete is physical; repeat with --confirm")
         return [run_openclaw(binary, ["delete", args.agent_id, "--force", "--json"], args.dry_run)]
+
+    if args.operation == "bind-peer":
+        if not args.peer_id.strip() or len(args.peer_id) > 255:
+            raise ManagerError("peer id must be non-empty and at most 255 characters")
+        desired = {
+            "channel": args.channel,
+            "accountId": args.account,
+            "peer": {"kind": "direct", "id": args.peer_id},
+        }
+        if args.dry_run:
+            return [{"status": "planned", "agent_id": args.agent_id, "match": desired}]
+        lock_path = os.environ.get("OPENCLAW_BINDINGS_LOCK", "/tmp/openclaw-agent-admin-bindings.lock")
+        with open(lock_path, "a+", encoding="utf-8") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            try:
+                bindings = run_config_json(binary, ["get", "bindings", "--json"])
+                if not isinstance(bindings, list):
+                    raise ManagerError("openclaw config get bindings did not return a list")
+                for binding in bindings:
+                    if not isinstance(binding, dict) or binding.get("match") != desired:
+                        continue
+                    if binding.get("agentId") != args.agent_id:
+                        raise ManagerError("peer_binding_conflict")
+                    return [{"status": "ok", "already_present": True, "agent_id": args.agent_id, "match": desired}]
+                next_bindings = [item for item in bindings if isinstance(item, dict)]
+                next_bindings.append({"type": "route", "agentId": args.agent_id, "match": desired})
+                run_config_json(binary, ["patch", "--stdin"], stdin=json.dumps({"bindings": next_bindings}))
+                readback = run_config_json(binary, ["get", "bindings", "--json"])
+                if not isinstance(readback, list) or not any(
+                    isinstance(item, dict) and item.get("agentId") == args.agent_id and item.get("match") == desired
+                    for item in readback
+                ):
+                    raise ManagerError("peer_binding_readback_failed")
+                return [{"status": "ok", "agent_id": args.agent_id, "match": desired}]
+            finally:
+                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
     raise ManagerError(f"unsupported operation: {args.operation}")
 

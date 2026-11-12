@@ -34,6 +34,8 @@ python3 skills/openclaw-agent-admin/scripts/manager.py create cliente-001 \
   --agent-dir ~/.openclaw/agents/cliente-001/agent \
   --model <provider/model-configurado>
 python3 skills/openclaw-agent-admin/scripts/manager.py update cliente-001 --emoji "🧠"
+python3 skills/openclaw-agent-admin/scripts/manager.py bind-peer cliente-001 \
+  --channel telegram --account default --peer-id 123456789
 python3 skills/openclaw-agent-admin/scripts/manager.py delete cliente-001 --confirm
 ```
 
